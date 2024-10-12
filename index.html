@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Gear Circular Range Input</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+      }
+
+      .slider-container {
+        display: flex;
+        justify-content: space-around;
+        width: 80%;
+        margin-bottom: 40px;
+      }
+
+      .slider-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #fff;
+        padding: 30px; /* Increased padding */
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .slider-wrapper:hover {
+        transform: scale(1.05);
+      }
+
+      .circular-range {
+        position: relative;
+        margin-bottom: 30px; /* Increased margin for better spacing */
+      }
+
+      canvas {
+        width: 250px; /* Increased width */
+        height: 250px; /* Increased height */
+        border-radius: 50%;
+        background: radial-gradient(circle, #ccc 30%, #bbb 70%);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); /* Increased shadow for better effect */
+      }
+
+      .value-display {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 30px; /* Increased font size for visibility */
+        font-weight: bold;
+        color: #333;
+      }
+
+      input[type="range"],
+      input[type="number"] {
+        width: 200px; /* Increased width for better alignment with larger canvas */
+        margin: 10px 0;
+      }
+
+      .blog-posts-text {
+        font-size: 18px;
+        color: #333;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .contact-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        margin-left: 10px;
+        border-bottom: 2px solid transparent;
+        transition: color 0.3s ease, border-bottom 0.3s ease;
+      }
+
+      .contact-link:hover {
+        color: #0056b3;
+        border-bottom: 2px solid #0056b3;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .result {
+        margin-top: 20px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+      }
+
+      .price-calculator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px; /* Increased padding for better layout */
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .price-calculator h2 {
+        font-size: 28px; /* Slightly increased font size */
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .price-calculator label {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .paypal-button-container {
+        margin-top: 20px;
+        display: none;
+      }
+    </style>
+    <script src="https://www.paypal.com/sdk/js?client-id=AeaCQMpk7mUcr5Um7folTvUs2vugZAQSOTCx9HBZZBSAANVvfdA16PfdWVETpSpxLzuoI71qPy5pLb2A&currency=USD"></script>
+  </head>
+  <body>
+    <div class="slider-container">
+      <div class="slider-wrapper">
+        <div class="circular-range" id="circular-range-1">
+          <canvas id="canvas-1"></canvas>
+          <div class="value-display" id="valueDisplay-1">1</div>
+        </div>
+        <input type="range" id="rangeInput-1" min="1" max="100" value="1" />
+        <label for="numBlogPosts">Number of Blog Posts</label>
+        <input type="number" id="numBlogPosts" min="1" max="100" value="1" />
+      </div>
+
+      <div class="slider-wrapper">
+        <div class="circular-range" id="circular-range-2">
+          <canvas id="canvas-2"></canvas>
+          <div class="value-display" id="valueDisplay-2">250</div>
+        </div>
+        <input
+          type="range"
+          id="rangeInput-2"
+          min="250"
+          max="10000"
+          step="50"
+          value="250"
+        />
+        <label for="wordCount">Word Count</label>
+        <input type="number" id="wordCount" min="250" max="10000" value="250" />
+      </div>
+    </div>
+
+    <p class="blog-posts-text">
+      More Than 5 Blog Posts?
+      <a
+        href="https://calendly.com/levilironb/free-seo-consultation"
+        target="_blank"
+        class="contact-link"
+        >Contact Us</a
+      >
+    </p>
+
+    <div class="price-calculator">
+      <h2>Price Calculator</h2>
+      <button id="calculateButton">Calculate Price</button>
+      <div class="result" id="result">Total Price: $0</div>
+    </div>
+
+    <div class="paypal-button-container" id="paypal-button-container"></div>
+
+    <script>
+      // Variables for the first gear
+      const canvas1 = document.getElementById("canvas-1");
+      const ctx1 = canvas1.getContext("2d");
+      const valueDisplay1 = document.getElementById("valueDisplay-1");
+      const rangeInput1 = document.getElementById("rangeInput-1");
+      const radius1 = 90;
+      const outerRadius1 = 120;
+      const gearTeeth1 = 12;
+      let value1 = 1;
+
+      // Variables for the second gear
+      const canvas2 = document.getElementById("canvas-2");
+      const ctx2 = canvas2.getContext("2d");
+      const valueDisplay2 = document.getElementById("valueDisplay-2");
+      const rangeInput2 = document.getElementById("rangeInput-2");
+      const radius2 = 90;
+      const outerRadius2 = 120;
+      const gearTeeth2 = 12;
+      let value2 = 250;
+
+      canvas1.width = 300;
+      canvas1.height = 300;
+      canvas2.width = 300;
+      canvas2.height = 300;
+
+      function drawGear(
+        ctx,
+        value,
+        gearTeeth,
+        outerRadius,
+        color,
+        minValue = 1,
+        maxValue = 100
+      ) {
+        ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+        for (let i = 0; i < gearTeeth; i++) {
+          const angle = (i / gearTeeth) * 2 * Math.PI;
+          const xOuter = 150 + Math.cos(angle) * outerRadius;
+          const yOuter = 150 + Math.sin(angle) * outerRadius;
+
+          ctx.beginPath();
+          ctx.moveTo(xOuter, yOuter);
+          ctx.lineTo(
+            150 + Math.cos(angle) * (outerRadius + 10),
+            150 + Math.sin(angle) * (outerRadius + 10)
+          );
+          ctx.lineTo(
+            150 + Math.cos(angle) * (outerRadius + 10),
+            150 + Math.sin(angle) * (outerRadius + 10)
+          );
+          ctx.lineTo(xOuter, yOuter);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.closePath();
+        }
+
+        const normalizedValue = (value - minValue) / (maxValue - minValue);
+        ctx.beginPath();
+        ctx.arc(
+          150,
+          150,
+          outerRadius,
+          -0.5 * Math.PI,
+          normalizedValue * 2 * Math.PI - 0.5 * Math.PI
+        );
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = "#0000FF"; // Changed to blue
+        ctx.stroke();
+        ctx.closePath();
+      }
+
+      function updateDisplay(
+        value,
+        valueDisplay,
+        drawFunc,
+        ctx,
+        gearTeeth,
+        outerRadius,
+        minValue,
+        maxValue
+      ) {
+        valueDisplay.textContent = value;
+        drawFunc(
+          ctx,
+          value,
+          gearTeeth,
+          outerRadius,
+          "#444",
+          minValue,
+          maxValue
+        );
+      }
+
+      function updateValue(
+        event,
+        valueDisplay,
+        rangeInput,
+        updateFunc,
+        drawFunc,
+        ctx,
+        gearTeeth,
+        outerRadius,
+        minValue,
+        maxValue
+      ) {
+        const value = parseInt(event.target.value);
+        updateFunc(
+          value,
+          valueDisplay,
+          drawFunc,
+          ctx,
+          gearTeeth,
+          outerRadius,
+          minValue,
+          maxValue
+        );
+      }
+
+      rangeInput1.addEventListener("input", (event) => {
+        value1 = event.target.value;
+        document.getElementById("numBlogPosts").value = value1;
+        updateValue(
+          event,
+          valueDisplay1,
+          rangeInput1,
+          updateDisplay,
+          drawGear,
+          ctx1,
+          gearTeeth1,
+          outerRadius1,
+          1,
+          100
+        );
+      });
+
+      rangeInput2.addEventListener("input", (event) => {
+        value2 = event.target.value;
+        document.getElementById("wordCount").value = value2;
+        updateValue(
+          event,
+          valueDisplay2,
+          rangeInput2,
+          updateDisplay,
+          drawGear,
+          ctx2,
+          gearTeeth2,
+          outerRadius2,
+          250,
+          10000
+        );
+      });
+
+      drawGear(ctx1, value1, gearTeeth1, outerRadius1, "#444", 1, 100);
+      drawGear(ctx2, value2, gearTeeth2, outerRadius2, "#444", 250, 10000);
+
+      // Price calculation logic
+      document
+        .getElementById("calculateButton")
+        .addEventListener("click", () => {
+          const numPosts = parseInt(rangeInput1.value);
+          const wordCount = parseInt(rangeInput2.value);
+          const price = numPosts * wordCount * 0.1;
+
+          document.getElementById(
+            "result"
+          ).innerHTML = `Total Price: $${price.toFixed(2)}`;
+
+          // Show the PayPal button after price calculation
+          document.getElementById("paypal-button-container").style.display =
+            "block";
+
+          // Store the calculated price in localStorage
+          localStorage.setItem("calculatedPrice", price.toFixed(2));
+
+          // Initialize PayPal button
+          paypal
+            .Buttons({
+              createOrder: function (data, actions) {
+                const calculatedPrice = localStorage.getItem("calculatedPrice");
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: calculatedPrice,
+                      },
+                    },
+                  ],
+                });
+              },
+              onApprove: function (data, actions) {
+                return actions.order.capture().then(function (details) {
+                  // Redirect to the desired URL after successful payment
+                  window.location.href = "https://www.levirank.com/client-info";
+                });
+              },
+              onError: function (err) {
+                console.error("Error during payment:", err);
+              },
+            })
+            .render("#paypal-button-container"); // Render the PayPal button inside the container
+        });
+
+      document.getElementById("copyIcon").addEventListener("click", () => {
+        const priceText = document.getElementById("result").innerText;
+        const priceValue = priceText.replace("Total Price: $", ""); // Extract price value
+        navigator.clipboard
+          .writeText(priceValue)
+          .then(() => {
+            alert("Price copied to clipboard!");
+          })
+          .catch((err) => {
+            console.error("Failed to copy: ", err);
+          });
+      });
+    </script>
+  </body>
+</html>
